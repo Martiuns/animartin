@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dézoom Photos iPhone Paramétrable</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    background: #000;
+  }
+
+  #container {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+  }
+
+  #image {
+    position: absolute;
+    transform-origin: top left;
+    will-change: transform;
+  }
+</style>
+</head>
+<body>
+<div id="container">
+  <img id="image" src="image.jpg" alt="Grande image">
+</div>
+
+<script>
+  const img = document.getElementById('image');
+  const container = document.getElementById('container');
+
+  // --------------------------
+  // PARAMÈTRES MODIFIABLES
+  // --------------------------
+  const focalX = 10351;       // X du point focal
+  const focalY = 2665;        // Y du point focal
+  const visibleSize = 1;    // Taille de la zone visible autour du point focal (px)
+  const duration = 40000;     // Durée du dézoom en ms
+  // --------------------------
+
+  img.onload = () => {
+    const imgWidth = img.naturalWidth;
+    const imgHeight = img.naturalHeight;
+
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
+
+    // Zoom final : image entière dans le conteneur
+    const endScale = Math.min(containerWidth / imgWidth, containerHeight / imgHeight);
+
+    // Zoom initial : visibleSize px autour du point focal
+    const startScale = Math.min(containerWidth, containerHeight) / visibleSize;
+
+    // Positions initiales et finales
+    const startX = -focalX * startScale + containerWidth / 2;
+    const startY = -focalY * startScale + containerHeight / 2;
+
+    const endX = (containerWidth - imgWidth * endScale) / 2;
+    const endY = (containerHeight - imgHeight * endScale) / 2;
+
+    let startTime = null;
+
+    // Easing cubic ease-out pour un mouvement naturel
+    const easing = t => 1 - Math.pow(1 - t, 8);
+
+    function animate(timestamp) {
+      if (!startTime) startTime = timestamp;
+      let elapsed = timestamp - startTime;
+      let t = Math.min(elapsed / duration, 1);
+      t = easing(t);
+
+      const currentScale = startScale + (endScale - startScale) * t;
+      const currentX = startX + (endX - startX) * t;
+      const currentY = startY + (endY - startY) * t;
+
+      img.style.transform = `translate(${currentX}px, ${currentY}px) scale(${currentScale})`;
+
+      if (t < 1) {
+        requestAnimationFrame(animate);
+      }
+    }
+
+    requestAnimationFrame(animate);
+  };
+</script>
+</body>
+</html>
